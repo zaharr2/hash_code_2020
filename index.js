@@ -24,20 +24,19 @@ let outPut = '';
                                                                       // TODO:  убирать из массива книг каждой библиотеки книги, которые уже существуют в предидущих библиотеках
                                                                       // ####################################################################################################################################################################
 function showCalculatedData() {
-  // console.log('booksCount:', booksCount);
-  // console.log('libsCount:', libsCount);
-  // console.log('deadline:', deadline);
+  console.log('booksCount:', booksCount);
+  console.log('libsCount:', libsCount);
+  console.log('deadline:', deadline);
   // console.log('booksArray:', booksArray);
-  // console.log('maxBookWeight:', maxBookWeight);
+  console.log('maxBookWeight:', maxBookWeight);
   // console.log('libraries:', libraries);
   // console.log(outPut);
-}
+};
 
 function sortLibBooksArr() {
-  libBooksArr = libBooksArr.sort((a, b) => { // сортируем массив весов книг от большего к меньшему и оставляем столько первых елементов, сколько библиотека может отправить если будет первой
-    return b - a;
+  libBooksArr = libBooksArr.sort((a, b) => { // сортируем массив весов книг от большего к меньшему
+    return booksArray[b] - booksArray[a];
   })
-  // }).slice(-startBooksCount(tmpLibData));
 }
 
 let tmpUniq = [];
@@ -56,15 +55,11 @@ function setCoefficient() {
     }
   });
 
-  libBooksArr = [...tmpUniq, ...tmpArr]
+  libBooksArr = [...tmpUniq, ...tmpArr];
 
-  // console.log('arr', libBooksArr);
-
-  // console.log('UNIQ VAL IN ARR OF BOOKS WEIGHTS:', tmpUniq);
   tmpLibData.coefficient = tmpUniq.reduce((accumulator, currentValue) => {
-    return accumulator + currentValue / maxBookWeight
+    return accumulator + booksArray[currentValue] / maxBookWeight
   }, 0);
-  // console.log('coefficient', tmpLibData.coefficient)
 }
 
 function startBooksCount(tmpLibData) { // количество книг отправленых библиотекой если она будет первой для входа
@@ -83,10 +78,6 @@ function moveLibWithMaxCoefficientToFirst(maxCoefficientVal) {
 }
 
 function sortLibrariesByCoefficient() {
-                                                  // TODO цикл сортировки библиотек
-                                                  // TODO начинаем с индекса 1
-                                                  // TODO после каждой прогонки массива прибавляем к счетчику 1
-                                                  // TODO
   let leftLibArrayPart = [];
   let rightLibArrayPart = [];
   let sumOfSignUps = 0;
@@ -95,74 +86,52 @@ function sortLibrariesByCoefficient() {
 
   let maxCoefficientVal = Math.max(...libraries.map(val => val.coefficient));
 
-  // console.log('libraries before', libraries);
-
   moveLibWithMaxCoefficientToFirst(maxCoefficientVal);
 
-  // console.log('libraries after', libraries);
-
   let tmpLibBooksArr = [];
-  let uniqTmpLibBooksArr = []; // уникальные значения в массиве книг одной библиотеки
+  let nonUniqTmpLibBooksArr = []; // уникальные значения в массиве книг одной библиотеки
 
-  // console.log('libraries', libraries.map(el => el.libBooksArr));
-
-  while (sumOfSignUps < deadline || splitCount <= libsCount) {
+  while (sumOfSignUps < deadline && splitCount <= libsCount) {
+    leftLibArrayPart = [];
+    rightLibArrayPart = [];
     sumOfSignUps = 0;
 
-    leftLibArrayPart = libraries.slice(0, splitCount); // левая часть библиотеки
+    leftLibArrayPart = [...libraries.slice(0, splitCount)]; // левая часть библиотеки
 
-    // console.log('leftLibArrayPart', leftLibArrayPart);
+    sumOfSignUps += leftLibArrayPart[leftLibArrayPart.length - 1].signUpProcess
 
-    sumOfSignUps = leftLibArrayPart.reduce((accumulator, currentValue) => { // сумма signUpProcess левой части массива библиотек
-      if (!currentValue) return;
-      return accumulator + currentValue.signUpProcess;
-    }, 0);
+    // sumOfSignUps = leftLibArrayPart.reduce((accumulator, currentValue) => { // сумма signUpProcess левой части массива библиотек
+    //   if (!currentValue) return;
+    //   return accumulator + currentValue.signUpProcess;
+    // }, 0);
 
-    uniqLeftPartArrValues.push(Array.of(...new Set(leftLibArrayPart[leftLibArrayPart.length - 1].libBooksArr))); // поиск уникальных значений в последней библиотеке левой части массива
+    uniqLeftPartArrValues = [...Array.of(...new Set([...uniqLeftPartArrValues, leftLibArrayPart[leftLibArrayPart.length - 1].libBooksArr].flat()))]; // поиск уникальных значений в последней библиотеке левой части массива
 
-    rightLibArrayPart = libraries.slice(splitCount); // правая часть библиотеки
-
-    // console.log('leftLibArrayPart', leftLibArrayPart);
-    // console.log('rightLibArrayPart', rightLibArrayPart);
-
-    // uniqLeftPartArrValues.forEach(el => {
-    //   for (let i = 0; i < rightLibArrayPart.length; i++) {
-    //     if (rightLibArrayPart[i] === el) {
-    //       tmpArr.splice(i, 1)[0];
-    //       break;
-    //     }
-    //   }
-    // });
+    rightLibArrayPart = [...libraries.slice(splitCount)]; // правая часть библиотеки
 
     rightLibArrayPart.forEach(lib => {
-      // console.log('BEFORE', lib.libBooksArr);
-
       tmpLibBooksArr = [...lib.libBooksArr];
-      uniqTmpLibBooksArr = [];
+      nonUniqTmpLibBooksArr = [];
 
-      uniqLeftPartArrValues.forEach(val => {
+      uniqLeftPartArrValues.forEach((val) => {
         for (let i = 0; i < tmpLibBooksArr.length; i++) {
           if (val === tmpLibBooksArr[i]) {
-            uniqTmpLibBooksArr.push(tmpLibBooksArr.splice(i, 1)[0]);
-            break;
+            let tmp = tmpLibBooksArr.splice(i, 1)[0];
+            i -= 1;
+            nonUniqTmpLibBooksArr.push(tmp);
+            // break;
           }
         }
       });
 
-      lib.libBooksArr = [...uniqTmpLibBooksArr, ...tmpLibBooksArr]; // соединяем вначале уникальные значения затем повторяющиеся
-
-      // console.log('AFTER', lib.libBooksArr);
-
-      // lib.libBooksArr = lib.libBooksArr
-        // .filter( ( el ) => !uniqLeftPartArrValues.includes( el ) )
-        // .sort((a, b) => b - a)
+      lib.libBooksArr = [...tmpLibBooksArr, ...nonUniqTmpLibBooksArr]; // соединяем вначале уникальные значения затем повторяющиеся
 
       if (lib.libBooksArr.length) {
-        if (lib.libBooksArr.length > ((deadline - sumOfSignUps) * lib.perDay)) {
-          lib.libBooksArr = lib.libBooksArr.slice(-leftLibArrayPart[leftLibArrayPart.length - 1].signUpProcess)
-        }
+        // if (lib.libBooksArr.length > ((deadline - sumOfSignUps) * lib.perDay)) {
+        //   lib.libBooksArr = lib.libBooksArr.slice(-leftLibArrayPart[leftLibArrayPart.length - 1].signUpProcess)
+        // }
 
-        lib.coefficient = uniqTmpLibBooksArr.reduce((accumulator,currentValue) => {
+        lib.coefficient = tmpLibBooksArr.reduce((accumulator, currentValue) => {
           return accumulator + currentValue / maxBookWeight
         }, 0) // пересчет коеффициента каждой библиотеки
       } else {
@@ -170,24 +139,18 @@ function sortLibrariesByCoefficient() {
       }
     });
 
-    // console.log('leftLibArrayPart', leftLibArrayPart);
-    // console.log('rightLibArrayPart', rightLibArrayPart);
-
-
     rightLibArrayPart = rightLibArrayPart.sort((a, b) => { // сортируем массив библиотек по коеффициенту от большего к меньшему
       return b.coefficient - a.coefficient;
     });
 
     libraries = [...leftLibArrayPart, ...rightLibArrayPart];
 
-    libraries = libraries.sort((a, b) => { // сортировка библиотек по индексу от большего к меньшему
-      return b.coefficient - a.coefficient;
-    });
+    // libraries = libraries.sort((a, b) => { // сортировка библиотек по индексу от большего к меньшему
+    //   return b.coefficient - a.coefficient;
+    // });
 
     splitCount++;
   }
-
-  // console.log('libraries', libraries.map(el => el.libBooksArr));
 }
 
 function clrOutputDirectory() {
@@ -196,13 +159,30 @@ function clrOutputDirectory() {
   fsExtra.emptyDirSync(directory)
 }
 
-function setOutputData() {
-  outPut += libraries.length + '\n';
+function setOutputData() {                  //########################## setOutputData ##############################
+  outPut = '';
 
-  libraries.forEach((lib, index) => {
-    outPut += lib.libStarterIndex + ' ' + lib.libBooksArr.length + '\n';
-    outPut += lib.libBooksArr.toString().replace(/,/g, ' ') + '\n';
+  let tmpCountOfPositiveCoefficient = 0;
+  let tmpSendBooksCount = 0;
+  let tmpDeadline = deadline;
+
+  libraries.forEach(lib => {
+    tmpDeadline -= lib.signUpProcess;
+    tmpSendBooksCount = tmpDeadline * lib.perDay;
+
+    if (lib.coefficient > 0 && tmpDeadline > 0) {
+      tmpCountOfPositiveCoefficient++;
+      outPut += lib.libStarterIndex + ' ' + lib.libBooksArr.slice(0, tmpSendBooksCount).length + '\n';
+      outPut += lib.libBooksArr.toString().replace(/,/g, ' ') + '\n';
+    }
   });
+
+  outPut = tmpCountOfPositiveCoefficient + '\n' + outPut;
+
+  // libraries.forEach((lib, index) => {
+  //   outPut += lib.libStarterIndex + ' ' + lib.libBooksArr.length + '\n';
+  //   outPut += lib.libBooksArr.toString().replace(/,/g, ' ') + '\n';
+  // });
 }
 
 function saveData(fName) {
@@ -213,7 +193,6 @@ function readLines(input) {
   let remaining = '';
 
   libraries = [];
-  outPut = '';
   remaining += input;
 
   index = remaining.indexOf('\n');
@@ -221,7 +200,7 @@ function readLines(input) {
 
   booksCount = parseInt(line[0]);
   libsCount = parseInt(line[1]);
-  deadline = parseInt(line[2]) - 1;
+  deadline = parseInt(line[2]);
 
   remaining = remaining.substring(index + 1);
   index = remaining.indexOf('\n');
@@ -234,7 +213,7 @@ function readLines(input) {
   remaining = remaining.substring(index + 1);
   index = remaining.indexOf('\n');
 
-  while (index > -1) {
+  while (index > 0) {
     tmpLibData = {};
     libBooksArr = [];
 
@@ -249,10 +228,11 @@ function readLines(input) {
 
     index = remaining.indexOf('\n');
 
-    line = remaining.substring(0, index);
+    line = remaining.substring(0, index).split(' ');
     remaining = remaining.substring(index + 1);
 
-    libBooksArr.push(...line.split(' ').map(item => booksArray[parseInt(item)])); // заполнение массива книг библиотеки весами книг из массива весов книг =)
+    libBooksArr = [...line.map(item => parseInt(item))];
+    // libBooksArr.push(...line.split(' ').map(item => booksArray[parseInt(item)])); // заполнение массива книг библиотеки весами книг из массива весов книг =)
     sortLibBooksArr(); // сортировка книг по весу от большего к меньшему
     setCoefficient(); // вычисление коеффициента каждой библиотеки
 
@@ -263,8 +243,6 @@ function readLines(input) {
       ...tmpLibData,
       libBooksArr
     });
-
-    // console.log('libBooksArr', libBooksArr)
 
     libStarterIndex++;
   }
@@ -277,14 +255,11 @@ function readLines(input) {
 const fileNames = [
   'a_example.txt',
   // 'b_read_on.txt',
-  // 'c_incunabula.txt',
+  'c_incunabula.txt',
   // 'd_tough_choices.txt',
   // 'e_so_many_books.txt',
   // 'f_libraries_of_the_world.txt'
 ];
-
-
-// let input = fs.createReadStream('in/a_example.txt');
 
 clrOutputDirectory();
 
@@ -296,14 +271,3 @@ fileNames.forEach(fName => {
     saveData(fName);
   });
 })
-
-// fsExtra.readFile('in/a_example.txt', 'utf8', (err, data) => {
-//   if (err) throw err;
-//   // console.log(input.indexOf('\n'));
-//   readLines(data);
-// });
-// readLines(input);
-// console.log(input)
-
-// input = fs.createReadStream('in/b_read_on.txt');
-// readLines(input);
