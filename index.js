@@ -1,4 +1,5 @@
 const fsExtra = require('fs-extra');
+const fs = require('fs');
 const JSZip = require("jszip");
 
 let index = null;
@@ -35,33 +36,41 @@ function showCalculatedData() {
   // console.log(outPut);
 };
 
-function sortLibBooksArr() {
-  libBooksArr = libBooksArr.sort((a, b) => { // сортируем массив весов книг от большего к меньшему
-    return booksArray[b] - booksArray[a];
-  })
-}
-
 let tmpUniq = [];
 let tmpArr = [];
 
-function setCoefficient() {
-  tmpUniq = Array.of(...new Set(libBooksArr));
-  tmpArr = [...libBooksArr];
+function sortLibBooksArrSetCoefficient() {
+  let tmp = 0;
 
-  tmpUniq.forEach(el => {
-    for (let i = 0; i < tmpArr.length; i++) {
-      if (tmpArr[i] === el) {
-        tmpArr.splice(i, 1)[0];
-        break;
-      }
-    }
-  });
+  for (let i = 0; i < libBooksArr.length; i++) {
+    tmp = deadline - libBooksArr[i].signUpProcess;
 
-  libBooksArr = [...tmpUniq, ...tmpArr];
+    libBooksArr = libBooksArr.slice(tmp).sort((a, b) => { // сортируем массив весов книг от большего к меньшему
+      return booksArray[b] - booksArray[a];
+    });
 
-  tmpLibData.coefficient = tmpUniq.reduce((accumulator, currentValue) => {
-    return accumulator + parseFloat((booksArray[currentValue] / maxBookWeight).toFixed(4))
-  }, 0);
+    tmpLibData.coefficient = libBooksArr.reduce((accumulator, currentValue) => {
+      return accumulator + parseFloat((booksArray[currentValue] / maxBookWeight).toFixed(4))
+    }, 0);
+  }
+
+  // tmpUniq = Array.of(...new Set(libBooksArr));
+  // tmpArr = [...libBooksArr];
+  //
+  // tmpUniq.forEach(el => {
+  //   for (let i = 0; i < tmpArr.length; i++) {
+  //     if (tmpArr[i] === el) {
+  //       tmpArr.splice(i, 1)[0];
+  //       break;
+  //     }
+  //   }
+  // });
+  //
+  // libBooksArr = [...tmpUniq, ...tmpArr];
+  //
+  // tmpLibData.coefficient = tmpUniq.reduce((accumulator, currentValue) => {
+  //   return accumulator + parseFloat((booksArray[currentValue] / maxBookWeight).toFixed(4))
+  // }, 0);
 }
 
 function startBooksCount(tmpLibData) { // количество книг отправленых библиотекой если она будет первой для входа
@@ -77,38 +86,48 @@ splitCount = 0;
 function sortLibrariesByCoefficient() {
   if (sumOfSignUps >= deadline || splitCount >= libsCount) return;
 
-  if (!splitCount) libraries.sort((a, b) => parseFloat(b.coefficient) - parseFloat(a.coefficient));
+  // if (!splitCount) {
+  //   libraries = libraries.sort((a, b) => parseFloat(b.coefficient) - parseFloat(a.coefficient));
+  //   // console.log(libraries[0].coefficient);
+  //   libraries[0].libBooksArr = [...new Set([...libraries[0].libBooksArr])];
+  //   // console.log(libraries[0].libBooksArr);
+  // }
 
-  left = libraries.slice(0, splitCount);
-
-  if (left.length) {
-    leftUniqValues = [...new Set([...left.map(lib => lib.libBooksArr).flat()])];
-
-    right = libraries.slice(splitCount);
-
-    sumOfSignUps += left[left.length - 1].signUpProcess;
-
-    for (let i = 0; i < right.length; i++) {
-      if ((right[i].signUpProcess + sumOfSignUps < deadline) && right[i].coefficient > 0) {
-        right[i].libBooksArr = right[i].libBooksArr.filter(el => !leftUniqValues.includes(el))
-        if (right[i].libBooksArr.length) {
-          right[i].coefficient = right[i].libBooksArr.reduce((accumulator, currentValue) => {
-            return accumulator + parseFloat((booksArray[currentValue] / maxBookWeight).toFixed(4))
-          }, 0);
-        } else {
-          right[i].coefficient = 0;
-        }
-      }
-    }
-
-    libraries = [...left, ...right];
-
-    libraries.sort((a, b) => parseFloat(b.coefficient) - parseFloat(a.coefficient));
-  }
-
-  splitCount++;
-
-  sortLibrariesByCoefficient();
+  // left = libraries.slice(0, splitCount);
+  //
+  // if (left.length) {
+  //   leftUniqValues = [...new Set([...leftUniqValues, ...left[left.length - 1].libBooksArr])];
+  //
+  //   // console.log('leftUniqValues', leftUniqValues)
+  //
+  //   right = libraries.slice(splitCount);
+  //
+  //   sumOfSignUps += left[left.length - 1].signUpProcess;
+  //
+  //   for (let i = 0; i < right.length; i++) {
+  //     if ((right[i].signUpProcess + sumOfSignUps < deadline) && right[i].coefficient > 0) {
+  //       right[i].libBooksArr = right[i].libBooksArr.filter(el => !leftUniqValues.includes(el))
+  //       // console.log(right[i].libBooksArr)
+  //       if (right[i].libBooksArr.length) {
+  //         right[i].coefficient = right[i].libBooksArr.reduce((accumulator, currentValue) => {
+  //           return accumulator + parseFloat((booksArray[currentValue] / maxBookWeight).toFixed(4))
+  //         }, 0);
+  //       } else {
+  //         right[i].coefficient = 0;
+  //       }
+  //     }
+  //   }
+  //
+  //   right = right.filter(el => el.coefficient > 0).sort((a, b) => parseFloat(b.coefficient) - parseFloat(a.coefficient));
+  //
+  //   libraries = [...left, ...right];
+  //
+  //   if (leftUniqValues.length === booksArray.length) return;
+  // }
+  //
+  // splitCount++;
+  //
+  // sortLibrariesByCoefficient();
 }
 
 function clrOutputDirectory() {
@@ -131,23 +150,31 @@ function clrOutputDirectory() {
 
 function setOutputData() {                  //########################## setOutputData ##############################
   outPut = '';
-  outPut += splitCount + '\n';
+  // outPut += libraries.length + '\n';
 
   let tmpSendBooksCount = 0;
   let tmpDeadline = deadline;
 
-  for (let i = 0; i < libraries.length; i++) {
+  // console.log(libraries.length)
+  let i = 0;
+  for (i = 0; i < libraries.length; i++) {
     tmpDeadline -= libraries[i].signUpProcess;
     tmpSendBooksCount = tmpDeadline * libraries[i].perDay;
 
-    if (libraries[i].coefficient > 0 && tmpDeadline > 0) {
+    // console.log('tmpDeadline', tmpDeadline)
+
+    if (tmpDeadline > 0) {
       outPut += libraries[i].libStarterIndex + ' ' + libraries[i].libBooksArr.slice(0, tmpSendBooksCount).length + '\n';
-      outPut += libraries[i].libBooksArr.toString().replace(/,/g, ' ') + '\n';
+      outPut += libraries[i].libBooksArr.slice(0, tmpSendBooksCount).toString().replace(/,/g, ' ') + '\n';
     } else {
       console.log('BREAK')
       break;
     }
   }
+
+  console.log(i)
+
+  outPut = i + '\n' + outPut;
 }
 
 function saveData(fName) {
@@ -198,8 +225,7 @@ function readLines(input) {
 
     libBooksArr = [...line.map(item => parseInt(item))];
     // libBooksArr.push(...line.split(' ').map(item => booksArray[parseInt(item)])); // заполнение массива книг библиотеки весами книг из массива весов книг =)
-    sortLibBooksArr(); // сортировка книг по весу от большего к меньшему
-    setCoefficient(); // вычисление коеффициента каждой библиотеки
+    sortLibBooksArrSetCoefficient(); // сортировка книг по весу от большего к меньшему вычисление коеффициента каждой библиотеки
 
     index = remaining.indexOf('\n');
 
@@ -220,10 +246,10 @@ function readLines(input) {
 const fileNames = [
   // 'a_example.txt',
   // 'b_read_on.txt',
-  'c_incunabula.txt',
+  // 'c_incunabula.txt',
   // 'd_tough_choices.txt',
   // 'e_so_many_books.txt',
-  // 'f_libraries_of_the_world.txt'
+  'f_libraries_of_the_world.txt'
 ];
 
 clrOutputDirectory();
